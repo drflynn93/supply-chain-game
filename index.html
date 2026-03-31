@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supply Chain Challenge — Sports Marketing Edition</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #f5f4f0; color: #1a1a18; min-height: 100vh; }
+
+/* ── CRAWL ── */
+#crawl-screen {
+  background: #000;
+  width: 100%; min-height: 100vh;
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+@keyframes stars-drift { from{transform:translateY(0)} to{transform:translateY(80px)} }
+@keyframes fade-logo {
+  0%{opacity:0;transform:translate(-50%,-50%) scale(2.4)}
+  25%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  70%{opacity:1;transform:translate(-50%,-50%) scale(0.55)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(0.1)}
+}
+@keyframes crawl { from{top:105%} to{top:-420%} }
+@keyframes fadein { from{opacity:0} to{opacity:1} }
+@keyframes fadeout { from{opacity:1} to{opacity:0} }
+@keyframes ep-anim {
+  0%,5%{opacity:0} 15%,75%{opacity:1} 90%,100%{opacity:0}
+}
+@keyframes show-skip {
+  0%,85%{opacity:0;pointer-events:none}
+  86%,100%{opacity:1;pointer-events:auto}
+}
+#starfield {
+  position:absolute; inset:0; width:100%; height:100%;
+  animation: stars-drift 14s linear infinite;
+}
+#ep-label {
+  position:absolute; top:12%; left:50%; transform:translateX(-50%);
+  color:#4fc3f7; font-family:Georgia,serif; font-size:14px;
+  letter-spacing:7px; text-transform:uppercase;
+  white-space:nowrap; text-align:center;
+  animation: ep-anim 5s ease-in-out 0.4s forwards;
+  opacity:0;
+}
+#logo-wrap {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%) scale(2.4);
+  text-align:center;
+  animation: fade-logo 5.5s ease-in-out 4.2s forwards;
+  opacity:0;
+}
+#logo-title {
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:54px; font-weight:900; color:#FFE81F;
+  letter-spacing:3px; line-height:1.1;
+}
+#logo-sub {
+  font-family:Georgia,serif; font-size:13px;
+  color:#FFE81F; letter-spacing:9px;
+  text-transform:uppercase; margin-top:8px;
+}
+#crawl-perspective {
+  position:absolute; inset:0;
+  perspective:280px; perspective-origin:50% 108%;
+  opacity:0;
+  animation: fadein 1.5s ease-in 9.5s forwards;
+}
+#crawl-stage {
+  position:absolute; width:68%; left:16%;
+  top:105%;
+  transform-origin:50% 0;
+  transform:rotateX(22deg);
+  animation: crawl 42s linear 10s forwards;
+  text-align:justify;
+}
+.c-open {
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:21px; font-weight:700; color:#FFE81F;
+  text-align:center; line-height:1.65; margin-bottom:1.9em;
+  letter-spacing:1px;
+}
+.c-body {
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:17px; color:#FFE81F;
+  line-height:1.8; margin-bottom:1.5em; letter-spacing:0.3px;
+}
+.c-end {
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:19px; font-weight:700; color:#FFE81F;
+  text-align:center; line-height:1.75;
+  margin-top:2.5em; letter-spacing:1px;
+}
+#skip-btn {
+  position:absolute; bottom:24px; right:24px;
+  background:rgba(255,232,31,0.1); border:1px solid #FFE81F;
+  color:#FFE81F; font-family:Georgia,serif;
+  font-size:12px; letter-spacing:3px; text-transform:uppercase;
+  padding:8px 20px; border-radius:4px; cursor:pointer;
+  opacity:0;
+  animation: show-skip 42s linear 10s forwards;
+  transition:background 0.2s; z-index:20;
+}
+#skip-btn:hover { background:rgba(255,232,31,0.22); }
+
+/* ── MODE ── */
+#mode-screen {
+  display:none; flex-direction:column;
+  align-items:center; justify-content:center;
+  min-height:100vh; padding:2rem;
+}
+.mode-title { font-size:2rem; font-weight:700; margin-bottom:0.3rem; text-align:center; }
+.mode-sub { color:#5f5e5a; font-size:0.95rem; margin-bottom:0.6rem; text-align:center; max-width:520px; }
+.mode-context {
+  background:#EEEDFE; border-radius:10px; padding:0.8rem 1.1rem;
+  font-size:0.82rem; color:#3C3489; max-width:520px;
+  margin-bottom:2rem; line-height:1.65;
+}
+.mode-cards { display:flex; gap:1.5rem; flex-wrap:wrap; justify-content:center; }
+.mode-card {
+  background:white; border:1px solid #d3d1c7; border-radius:16px;
+  padding:2rem; width:250px; cursor:pointer;
+  transition:border-color 0.15s, transform 0.1s; text-align:center;
+}
+.mode-card:hover { border-color:#534AB7; transform:translateY(-2px); }
+.mode-icon { font-size:2.2rem; margin-bottom:0.75rem; }
+.mode-name { font-size:1rem; font-weight:700; margin-bottom:0.4rem; }
+.mode-desc { font-size:0.8rem; color:#5f5e5a; line-height:1.5; }
+
+/* ── SHARED GAME ── */
+#game-screen, #h2h-screen { display:none; max-width:900px; margin:0 auto; padding:1rem; }
+#h2h-screen { max-width:1100px; }
+
+.game-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0.85rem 1.1rem; background:white;
+  border-radius:12px; border:1px solid #d3d1c7; margin-bottom:0.75rem;
+}
+.game-title { font-size:1rem; font-weight:700; }
+.game-sub { font-size:0.73rem; color:#888780; margin-top:2px; }
+.round-badge {
+  background:#EEEDFE; color:#3C3489;
+  font-size:0.76rem; font-weight:700;
+  padding:3px 10px; border-radius:7px;
+}
+.scorecard { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:0.75rem; }
+.score-card {
+  background:white; border:1px solid #d3d1c7;
+  border-radius:10px; padding:0.6rem 0.9rem; text-align:center;
+}
+.score-label { font-size:0.67rem; color:#888780; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:3px; }
+.score-value { font-size:1.3rem; font-weight:700; }
+.score-value.good { color:#0F6E56; }
+.score-value.warn { color:#854F0B; }
+.score-value.bad  { color:#A32D2D; }
+
+.panel { background:white; border:1px solid #d3d1c7; border-radius:12px; padding:1rem 1.1rem; margin-bottom:0.75rem; }
+.panel-title { font-size:0.77rem; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:#888780; margin-bottom:0.85rem; }
+
+.supplier-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.supplier-card {
+  border:1.5px solid #d3d1c7; border-radius:10px; padding:0.75rem;
+  cursor:pointer; transition:border-color 0.12s; position:relative;
+}
+.supplier-card:hover { border-color:#7F77DD; }
+.supplier-card.selected { border-color:#534AB7; background:#EEEDFE; }
+.supplier-card.disrupted { opacity:0.42; cursor:not-allowed; }
+.supplier-name { font-weight:700; font-size:0.84rem; margin-bottom:4px; }
+.supplier-stats { font-size:0.74rem; color:#5f5e5a; line-height:1.65; }
+.risk-badge { position:absolute; top:7px; right:7px; font-size:0.61rem; font-weight:700; padding:2px 6px; border-radius:5px; }
+.risk-low { background:#EAF3DE; color:#3B6D11; }
+.risk-med { background:#FAEEDA; color:#854F0B; }
+.risk-high { background:#FCEBEB; color:#A32D2D; }
+
+.slider-row { display:flex; align-items:center; gap:10px; margin:0.4rem 0; }
+.slider-row label { font-size:0.82rem; color:#5f5e5a; min-width:120px; }
+.slider-row input[type=range] { flex:1; }
+.slider-val { font-size:0.85rem; font-weight:700; min-width:70px; text-align:right; }
+.cost-hint { font-size:0.72rem; color:#888780; margin-top:4px; }
+
+.shipping-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.ship-card {
+  border:1.5px solid #d3d1c7; border-radius:10px;
+  padding:0.75rem; cursor:pointer; transition:border-color 0.12s; text-align:center;
+}
+.ship-card:hover { border-color:#7F77DD; }
+.ship-card.selected { border-color:#534AB7; background:#EEEDFE; }
+.ship-name { font-weight:700; font-size:0.82rem; margin-bottom:3px; }
+.ship-stats { font-size:0.73rem; color:#5f5e5a; line-height:1.65; }
+
+.event-banner { border-radius:9px; padding:0.55rem 0.9rem; font-size:0.82rem; margin-bottom:0.65rem; line-height:1.5; }
+.ev-bad  { background:#FCEBEB; border:1px solid #F7C1C1; color:#501313; }
+.ev-warn { background:#FAEEDA; border:1px solid #FAC775; color:#633806; }
+.ev-info { background:#E6F1FB; border:1px solid #B5D4F4; color:#0C447C; }
+.ev-source { font-size:0.67rem; font-style:italic; margin-top:3px; opacity:0.75; }
+
+.demand-reveal { background:#f5f4f0; border-radius:9px; padding:0.85rem 1rem; margin-bottom:0.75rem; }
+.demand-row { display:flex; justify-content:space-between; align-items:center; font-size:0.83rem; padding:3px 0; border-bottom:0.5px solid #D3D1C7; }
+.demand-row:last-child { border-bottom:none; font-weight:700; font-size:0.9rem; padding-top:7px; }
+
+.btn { display:inline-block; padding:0.55rem 1.3rem; border-radius:8px; font-size:0.85rem; font-weight:700; cursor:pointer; border:none; transition:opacity 0.12s, transform 0.1s; }
+.btn:active { transform:scale(0.98); }
+.btn-primary { background:#534AB7; color:white; }
+.btn-primary:hover { opacity:0.88; }
+.btn-secondary { background:white; color:#534AB7; border:1.5px solid #534AB7; }
+.btn-sm { padding:0.32rem 0.8rem; font-size:0.76rem; }
+.btn-row { display:flex; gap:8px; justify-content:flex-end; margin-top:0.85rem; }
+
+.results-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:1.25rem 0; }
+.result-big { background:white; border:1px solid #d3d1c7; border-radius:12px; padding:1rem; text-align:center; }
+.result-label { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:#888780; margin-bottom:5px; }
+.result-num { font-size:1.9rem; font-weight:800; }
+.result-sub { font-size:0.74rem; color:#5f5e5a; margin-top:3px; }
+
+.progress-bar { height:5px; background:#D3D1C7; border-radius:3px; overflow:hidden; margin-bottom:0.75rem; }
+.progress-fill { height:100%; background:#534AB7; border-radius:3px; transition:width 0.4s ease; }
+
+.debrief-table { width:100%; border-collapse:collapse; font-size:0.79rem; }
+.debrief-table th { text-align:left; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.05em; color:#888780; padding:5px 6px; border-bottom:1px solid #D3D1C7; }
+.debrief-table td { padding:6px 6px; border-bottom:0.5px solid #D3D1C7; }
+.debrief-table tr:last-child td { border-bottom:none; }
+
+.h2h-players { display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; align-items:start; }
+.h2h-col { background:white; border-radius:12px; border:1px solid #d3d1c7; padding:0.9rem; }
+.h2h-col-title { font-weight:800; font-size:0.84rem; text-align:center; padding:0.35rem; border-radius:8px; margin-bottom:0.65rem; }
+.h2h-col-title.p1 { background:#EEEDFE; color:#3C3489; }
+.h2h-col-title.p2 { background:#E1F5EE; color:#085041; }
+.h2h-vs { font-size:1.1rem; font-weight:800; color:#B4B2A9; align-self:center; text-align:center; }
+.h2h-mini-label { font-size:0.67rem; font-weight:700; text-transform:uppercase; color:#888780; margin:8px 0 5px; }
+
+.hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     CRAWL SCREEN
+══════════════════════════════════════════════════════ -->
+<div id="crawl-screen">
+
+<svg id="starfield" viewBox="0 0 800 700" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="780" fill="#000"/>
+  <g fill="white">
+    <circle cx="38"  cy="14"  r="0.8" opacity=".9"/>
+    <circle cx="107" cy="52"  r="1.0" opacity=".7"/>
+    <circle cx="189" cy="8"   r="0.6" opacity=".8"/>
+    <circle cx="257" cy="74"  r="1.1" opacity=".6"/>
+    <circle cx="334" cy="21"  r="0.7" opacity=".9"/>
+    <circle cx="412" cy="59"  r="0.9" opacity=".7"/>
+    <circle cx="490" cy="13"  r="0.6" opacity=".85"/>
+    <circle cx="561" cy="86"  r="1.2" opacity=".5"/>
+    <circle cx="638" cy="29"  r="0.8" opacity=".75"/>
+    <circle cx="714" cy="67"  r="0.6" opacity=".8"/>
+    <circle cx="762" cy="18"  r="0.9" opacity=".7"/>
+    <circle cx="68"  cy="141" r="0.9" opacity=".6"/>
+    <circle cx="151" cy="163" r="0.7" opacity=".8"/>
+    <circle cx="229" cy="118" r="1.1" opacity=".7"/>
+    <circle cx="307" cy="152" r="0.6" opacity=".9"/>
+    <circle cx="384" cy="107" r="0.8" opacity=".6"/>
+    <circle cx="462" cy="176" r="1.0" opacity=".7"/>
+    <circle cx="540" cy="129" r="0.7" opacity=".85"/>
+    <circle cx="617" cy="155" r="0.9" opacity=".65"/>
+    <circle cx="692" cy="140" r="0.7" opacity=".75"/>
+    <circle cx="750" cy="162" r="1.0" opacity=".6"/>
+    <circle cx="24"  cy="231" r="1.0" opacity=".7"/>
+    <circle cx="93"  cy="265" r="0.6" opacity=".9"/>
+    <circle cx="170" cy="210" r="0.8" opacity=".75"/>
+    <circle cx="248" cy="287" r="1.1" opacity=".6"/>
+    <circle cx="325" cy="242" r="0.7" opacity=".8"/>
+    <circle cx="403" cy="269" r="0.9" opacity=".7"/>
+    <circle cx="481" cy="217" r="0.6" opacity=".85"/>
+    <circle cx="558" cy="256" r="1.0" opacity=".6"/>
+    <circle cx="636" cy="231" r="0.8" opacity=".75"/>
+    <circle cx="710" cy="248" r="0.6" opacity=".8"/>
+    <circle cx="775" cy="220" r="0.9" opacity=".65"/>
+    <circle cx="52"  cy="354" r="0.7" opacity=".8"/>
+    <circle cx="129" cy="387" r="1.0" opacity=".65"/>
+    <circle cx="207" cy="332" r="0.8" opacity=".7"/>
+    <circle cx="284" cy="365" r="0.6" opacity=".9"/>
+    <circle cx="362" cy="310" r="0.9" opacity=".7"/>
+    <circle cx="440" cy="376" r="1.1" opacity=".55"/>
+    <circle cx="518" cy="343" r="0.7" opacity=".8"/>
+    <circle cx="595" cy="354" r="0.8" opacity=".7"/>
+    <circle cx="671" cy="332" r="0.6" opacity=".85"/>
+    <circle cx="740" cy="368" r="0.9" opacity=".65"/>
+    <circle cx="16"  cy="443" r="1.1" opacity=".6"/>
+    <circle cx="84"  cy="465" r="0.8" opacity=".75"/>
+    <circle cx="162" cy="421" r="0.6" opacity=".85"/>
+    <circle cx="240" cy="487" r="0.9" opacity=".65"/>
+    <circle cx="318" cy="432" r="0.7" opacity=".8"/>
+    <circle cx="396" cy="454" r="1.0" opacity=".7"/>
+    <circle cx="474" cy="410" r="0.8" opacity=".75"/>
+    <circle cx="551" cy="476" r="0.6" opacity=".9"/>
+    <circle cx="629" cy="443" r="0.9" opacity=".65"/>
+    <circle cx="703" cy="459" r="0.7" opacity=".8"/>
+    <circle cx="769" cy="431" r="1.0" opacity=".6"/>
+    <circle cx="43"  cy="532" r="0.7" opacity=".8"/>
+    <circle cx="121" cy="554" r="0.9" opacity=".7"/>
+    <circle cx="198" cy="510" r="0.6" opacity=".85"/>
+    <circle cx="276" cy="576" r="1.1" opacity=".55"/>
+    <circle cx="354" cy="521" r="0.8" opacity=".75"/>
+    <circle cx="432" cy="543" r="0.7" opacity=".8"/>
+    <circle cx="510" cy="499" r="0.9" opacity=".7"/>
+    <circle cx="587" cy="565" r="0.6" opacity=".85"/>
+    <circle cx="664" cy="532" r="1.0" opacity=".65"/>
+    <circle cx="734" cy="548" r="0.8" opacity=".7"/>
+    <circle cx="79"  cy="621" r="0.8" opacity=".7"/>
+    <circle cx="157" cy="643" r="0.6" opacity=".9"/>
+    <circle cx="235" cy="621" r="0.9" opacity=".65"/>
+    <circle cx="313" cy="665" r="0.7" opacity=".8"/>
+    <circle cx="390" cy="632" r="1.0" opacity=".7"/>
+    <circle cx="468" cy="676" r="0.8" opacity=".75"/>
+    <circle cx="546" cy="610" r="0.6" opacity=".85"/>
+    <circle cx="624" cy="654" r="0.9" opacity=".65"/>
+    <circle cx="698" cy="628" r="0.7" opacity=".75"/>
+    <circle cx="757" cy="645" r="1.0" opacity=".6"/>
+  </g>
+</svg>
+
+<div id="ep-label">Episode XII</div>
+
+<div id="logo-wrap">
+  <div id="logo-title">SUPPLY CHAIN<br>CHALLENGE</div>
+  <div id="logo-sub">Sports Marketing Edition</div>
+</div>
+
+<div id="crawl-perspective">
+  <div id="crawl-stage">
+    <div class="c-open">A long time ago, in a supply chain<br>far, far away&hellip;</div>
+    <div class="c-open">EPISODE XII<br><br>THE STRAIT<br>STRIKES BACK</div>
+    <div class="c-body">The IRAN WAR has thrown galactic trade into chaos. The Strait of Hormuz — the great artery of the known universe — stands CLOSED. Qatari and UAE energy exports have gone dark. The shipping giants Maersk and Hapag-Lloyd have fled the Middle Eastern theater entirely.</div>
+    <div class="c-body">Ports around the Indian Ocean overflow with stranded cargo. A shipment of hair clips and playdough drifts helplessly off Karachi, costing its desperate owner $200 a day in demurrage fees. More than 100 vessels are trapped in the Gulf. The Empire of Global Trade trembles.</div>
+    <div class="c-body">Meanwhile, in the warehouse sector, a rebellion stirs. Big-box vacancies have hit multi-year highs. Cold-storage rates have collapsed. The Rebel Alliance of Third-Party Logistics scrambles to fill the void — DHL marshals 10 new outposts across North America, and FedEx has raised its market-cap flag over the ruins of a battered UPS.</div>
+    <div class="c-body">In this hour of crisis, ONE supply chain manager must rise. Armed only with a balanced scorecard and hard-won knowledge of cost tradeoffs, supplier risk, and inventory strategy, they must serve the fans — delivering jerseys, equipment, and licensed apparel to a fractured galaxy of consumers.</div>
+    <div class="c-body">The Balanced Scorecard awaits. COST. SPEED. FILL RATE. Only through mastery of all three can order be restored to the supply chain.</div>
+    <div class="c-end">May the supply chain<br>be with you.</div>
+    <div style="height:160px"></div>
+  </div>
+</div>
+
+<button id="skip-btn" onclick="endCrawl()">Skip &rsaquo;&rsaquo;</button>
+
+</div><!-- /crawl-screen -->
+
+
+<!-- ══════════════════════════════════════════════════════
+     MODE SCREEN
+══════════════════════════════════════════════════════ -->
+<div id="mode-screen">
+  <div class="mode-title">Supply Chain Challenge</div>
+  <div class="mode-sub">You manage licensed apparel &amp; equipment logistics for a major sports brand. Every decision affects cost, speed, and fill rate.</div>
+  <div class="mode-context">
+    <strong>Real-world context:</strong> The Iran War has closed the Strait of Hormuz, disrupting global shipping. Big-box warehouse demand is rebounding. FedEx just overtook UPS in market cap by cutting costs fast. Your supply chain decisions happen against this backdrop — just like Chapter 12.
+  </div>
+  <div class="mode-cards">
+    <div class="mode-card" onclick="startSolo()">
+      <div class="mode-icon">🏷️</div>
+      <div class="mode-name">Solo — Turn-Based</div>
+      <div class="mode-desc">6 rounds as a merchandise supply chain manager. Navigate real disruptions. Optimize your balanced scorecard.</div>
+    </div>
+    <div class="mode-card" onclick="startH2H()">
+      <div class="mode-icon">⚡</div>
+      <div class="mode-name">Head-to-Head</div>
+      <div class="mode-desc">Same scenario, two players on the same screen. Compete on the balanced scorecard — best combined score after 6 rounds wins.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SOLO GAME
+══════════════════════════════════════════════════════ -->
+<div id="game-screen">
+  <div class="game-header">
+    <div>
+      <div class="game-title">Sports Merch Supply Chain Challenge</div>
+      <div class="game-sub" id="round-label">Round 1 of 6 — Make your decisions</div>
+    </div>
+    <div style="display:flex;gap:7px;align-items:center">
+      <span class="round-badge" id="round-badge">Round 1/6</span>
+      <button class="btn btn-sm btn-secondary" onclick="backToMenu()">Menu</button>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="solo-progress" style="width:0%"></div></div>
+  <div class="scorecard">
+    <div class="score-card"><div class="score-label">Total Cost</div><div class="score-value" id="sc-cost">$0</div></div>
+    <div class="score-card"><div class="score-label">Fill Rate</div><div class="score-value" id="sc-fill">—</div></div>
+    <div class="score-card"><div class="score-label">Avg Delivery</div><div class="score-value" id="sc-speed">—</div></div>
+    <div class="score-card" style="border-color:#534AB7"><div class="score-label">Score</div><div class="score-value" id="sc-score" style="color:#534AB7">0</div></div>
+  </div>
+
+  <!-- Decision phase -->
+  <div id="decision-phase">
+    <div id="event-container"></div>
+    <div class="panel">
+      <div class="panel-title">1 · Select Manufacturer / Supplier</div>
+      <div class="supplier-grid" id="supplier-grid"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">2 · Set Inventory Level</div>
+      <div class="slider-row">
+        <label>Units to stock</label>
+        <input type="range" min="50" max="300" step="10" value="150" id="inv-slider" oninput="updateInv()">
+        <span class="slider-val" id="inv-val">150 units</span>
+      </div>
+      <div class="cost-hint" id="inv-cost-hint">Warehouse holding cost: $750/round · Stockout risk: medium</div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">3 · Choose Last-Mile Carrier</div>
+      <div class="shipping-grid" id="shipping-grid"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="confirmDecisions()">Confirm Decisions →</button>
+    </div>
+  </div>
+
+  <!-- Result phase -->
+  <div id="result-phase" class="hidden">
+    <div id="round-result-banner"></div>
+    <div class="panel">
+      <div class="panel-title">Round Results</div>
+      <div class="demand-reveal" id="demand-reveal"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="next-btn" onclick="nextRound()">Next Round →</button>
+    </div>
+  </div>
+
+  <!-- Final phase -->
+  <div id="final-phase" class="hidden">
+    <div class="panel">
+      <div class="panel-title">Final Scorecard — Season Summary</div>
+      <div class="results-grid">
+        <div class="result-big"><div class="result-label">Total Cost</div><div class="result-num" id="final-cost"></div><div class="result-sub">lower is better</div></div>
+        <div class="result-big"><div class="result-label">Fill Rate</div><div class="result-num" id="final-fill"></div><div class="result-sub">orders fulfilled</div></div>
+        <div class="result-big"><div class="result-label">Avg Delivery</div><div class="result-num" id="final-speed"></div><div class="result-sub">days per shipment</div></div>
+      </div>
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="font-size:0.8rem;color:#888780;margin-bottom:4px">Balanced Score</div>
+        <div style="font-size:2.8rem;font-weight:800;color:#534AB7" id="final-score"></div>
+        <div style="font-size:0.82rem;color:#5f5e5a;margin-top:5px" id="final-grade"></div>
+      </div>
+      <div class="panel-title" style="margin-bottom:0.6rem">Round-by-Round Log</div>
+      <table class="debrief-table">
+        <thead><tr><th>Rnd</th><th>Supplier</th><th>Inv</th><th>Carrier</th><th>Demand</th><th>Filled</th><th>Cost</th><th>Score</th></tr></thead>
+        <tbody id="debrief-body"></tbody>
+      </table>
+      <div style="margin-top:1.25rem;padding:0.9rem;background:#f5f4f0;border-radius:9px;font-size:0.8rem;color:#5f5e5a;line-height:1.75">
+        <strong style="color:#1a1a18;display:block;margin-bottom:6px">Class debrief questions:</strong>
+        1. Which tradeoff was hardest — cost vs. speed, or cost vs. fill rate?<br>
+        2. How did the Strait of Hormuz closure change your supplier strategy?<br>
+        3. What does the FedEx vs. UPS story tell us about last-mile carrier competition?<br>
+        4. If you were advising a real sports brand today, what is the single biggest supply chain vulnerability?
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="backToMenu()">Back to Menu</button>
+      <button class="btn btn-primary" onclick="startSolo()">Play Again</button>
+    </div>
+  </div>
+</div><!-- /game-screen -->
+
+
+<!-- ══════════════════════════════════════════════════════
+     HEAD-TO-HEAD SCREEN
+══════════════════════════════════════════════════════ -->
+<div id="h2h-screen">
+  <div class="game-header">
+    <div class="game-title">Head-to-Head · Sports Merch Supply Chain</div>
+    <div style="display:flex;gap:7px;align-items:center">
+      <span class="round-badge" id="h2h-round-badge">Round 1/6</span>
+      <button class="btn btn-sm btn-secondary" onclick="backToMenu()">Menu</button>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="h2h-progress" style="width:0%"></div></div>
+  <div id="h2h-event-container" style="margin-bottom:0.6rem"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0.75rem">
+    <div class="score-card" style="border-color:#534AB7">
+      <div class="score-label" style="color:#534AB7">Player 1 Score</div>
+      <div class="score-value" id="h2h-p1-score" style="color:#534AB7">0</div>
+    </div>
+    <div class="score-card" style="border-color:#0F6E56">
+      <div class="score-label" style="color:#0F6E56">Player 2 Score</div>
+      <div class="score-value" id="h2h-p2-score" style="color:#0F6E56">0</div>
+    </div>
+  </div>
+
+  <div id="h2h-decision-phase">
+    <div class="h2h-players">
+      <div class="h2h-col">
+        <div class="h2h-col-title p1">Player 1</div>
+        <div class="h2h-mini-label">Supplier</div>
+        <div id="h2h-p1-sup"></div>
+        <div class="h2h-mini-label">Inventory</div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <input type="range" min="50" max="300" step="10" value="150" id="h2h-inv1" oninput="updateH2HInv(1)" style="flex:1">
+          <span style="font-size:0.8rem;font-weight:700;min-width:58px;text-align:right" id="h2h-inv1-val">150 units</span>
+        </div>
+        <div class="h2h-mini-label">Carrier</div>
+        <div id="h2h-p1-ship"></div>
+      </div>
+      <div class="h2h-vs">VS</div>
+      <div class="h2h-col">
+        <div class="h2h-col-title p2">Player 2</div>
+        <div class="h2h-mini-label">Supplier</div>
+        <div id="h2h-p2-sup"></div>
+        <div class="h2h-mini-label">Inventory</div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <input type="range" min="50" max="300" step="10" value="150" id="h2h-inv2" oninput="updateH2HInv(2)" style="flex:1">
+          <span style="font-size:0.8rem;font-weight:700;min-width:58px;text-align:right" id="h2h-inv2-val">150 units</span>
+        </div>
+        <div class="h2h-mini-label">Carrier</div>
+        <div id="h2h-p2-ship"></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="confirmH2H()">Reveal Round Results →</button>
+    </div>
+  </div>
+
+  <div id="h2h-result-phase" class="hidden">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0.75rem">
+      <div class="panel" id="h2h-p1-result"></div>
+      <div class="panel" id="h2h-p2-result"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="h2h-next-btn" onclick="nextH2HRound()">Next Round →</button>
+    </div>
+  </div>
+
+  <div id="h2h-final-phase" class="hidden">
+    <div class="panel">
+      <div class="panel-title">Final Results</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.25rem">
+        <div class="result-big" id="h2h-final-p1"></div>
+        <div class="result-big" id="h2h-final-p2"></div>
+      </div>
+      <div style="text-align:center;padding:1rem;background:#EEEDFE;border-radius:12px;font-size:1.05rem;font-weight:800;color:#3C3489" id="h2h-winner"></div>
+      <div style="margin-top:1rem;padding:0.8rem;background:#f5f4f0;border-radius:9px;font-size:0.78rem;color:#5f5e5a;line-height:1.7">
+        <strong style="color:#1a1a18">Debrief:</strong> Compare strategies — did the winner stock more or less? Which carrier did they choose? Did geopolitical events punish one player more than the other?
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="backToMenu()">Menu</button>
+      <button class="btn btn-primary" onclick="startH2H()">Rematch</button>
+    </div>
+  </div>
+</div><!-- /h2h-screen -->
+
+
+<script>
+// ════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════
+const SUPPLIERS = [
+  { id:'A', name:'DomesticPro Apparel',   cost:18, reliability:0.96, risk:'low',  riskLabel:'Low Risk',  leadDays:1, note:'U.S.-based. No Hormuz exposure.' },
+  { id:'B', name:'MexicoEdge Mfg.',       cost:12, reliability:0.82, risk:'med',  riskLabel:'Med Risk',  leadDays:3, note:'Nearshore. Moderate port congestion risk.' },
+  { id:'C', name:'AsiaPacific Textiles',  cost:7,  reliability:0.60, risk:'high', riskLabel:'High Risk', leadDays:7, note:'Cheapest. Hormuz closure is devastating.' },
+];
+
+const CARRIERS = [
+  { id:'air',   name:'FedEx Priority Air', cost:18, days:1, note:"FedEx's B2B focus drives reliability." },
+  { id:'ground',name:'UPS Ground',         cost:7,  days:3, note:'High volume. UPS cutting 30K jobs — watch reliability.' },
+  { id:'econ',  name:'Economy Freight',    cost:2,  days:7, note:'Slowest. Routed via major ports — congestion risk.' },
+];
+
+const EVENTS = [
+  null,
+  { cls:'ev-bad',  msg:'⚠ Strait of Hormuz Closure — Iran has shut down Gulf shipping. AsiaPacific Textiles is completely unavailable this round.', source:'WSJ: "It\'s Not Just Oil: The Iran War Upends Global Supply Chains" — Mar 13, 2026', effect:'disable_C' },
+  null,
+  { cls:'ev-warn', msg:'📈 Championship Demand Surge — Game-day merchandise demand is 60% above forecast this round.', source:'Seasonal demand spike — championship window opens.', effect:'demand_surge' },
+  { cls:'ev-warn', msg:'⚠ Port Congestion — Indian Ocean ports jammed with redirected cargo. Economy Freight adds 4 extra days this round.', source:'WSJ: "Ports around the Indian Ocean are filling up with redirected cargoes."', effect:'economy_delay' },
+  { cls:'ev-info', msg:'📦 Warehouse Glut — Cold-storage and big-box vacancies at 20-year highs. Your holding cost drops 20% this round.', source:'WSJ: "Big Warehouses Are Back in Demand" & "Cold-Storage Vacancies Hit 20-Year High" — Mar 2026', effect:'cheap_warehouse' },
+];
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let state = {};
+
+function initSolo() {
+  state = { mode:'solo', round:0, totalCost:0, totalFilled:0, totalDemand:0, totalDays:0, totalOrders:0, log:[],
+            selSup:null, selInv:150, selCarrier:null };
+}
+function initH2H() {
+  state = { mode:'h2h', round:0,
+    p1:{ totalCost:0,totalFilled:0,totalDemand:0,totalDays:0,totalOrders:0,score:0,selSup:null,selInv:150,selCarrier:null },
+    p2:{ totalCost:0,totalFilled:0,totalDemand:0,totalDays:0,totalOrders:0,score:0,selSup:null,selInv:150,selCarrier:null }
+  };
+}
+
+// ════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════
+function showScreen(id) {
+  ['crawl-screen','mode-screen','game-screen','h2h-screen'].forEach(s => {
+    const el = document.getElementById(s);
+    if (s === 'crawl-screen' || s === 'mode-screen') {
+      el.style.display = (s === id) ? (s==='mode-screen'?'flex':'block') : 'none';
+    } else {
+      el.style.display = s === id ? 'block' : 'none';
+    }
+  });
+}
+
+function endCrawl() {
+  document.getElementById('crawl-screen').style.display = 'none';
+  document.getElementById('mode-screen').style.display = 'flex';
+}
+
+function backToMenu() { showScreen('mode-screen'); }
+function startSolo()  { initSolo(); showScreen('game-screen'); renderSoloRound(); }
+function startH2H()   { initH2H(); showScreen('h2h-screen'); renderH2HRound(); }
+
+// Auto-advance crawl after animation completes
+setTimeout(endCrawl, 53000);
+
+// ════════════════════════════════════════════
+// SOLO GAME
+// ════════════════════════════════════════════
+function renderSoloRound() {
+  const r = state.round;
+  document.getElementById('solo-progress').style.width = (r/6*100)+'%';
+  document.getElementById('round-badge').textContent = 'Round '+(r+1)+'/6';
+  document.getElementById('round-label').textContent = 'Round '+(r+1)+' of 6 — Make your decisions';
+  document.getElementById('decision-phase').classList.remove('hidden');
+  document.getElementById('result-phase').classList.add('hidden');
+  document.getElementById('final-phase').classList.add('hidden');
+
+  const ev = EVENTS[r];
+  const ec = document.getElementById('event-container');
+  ec.innerHTML = ev
+    ? `<div class="event-banner ${ev.cls}">${ev.msg}<div class="ev-source">Source: ${ev.source}</div></div>`
+    : '';
+
+  // Suppliers
+  const sg = document.getElementById('supplier-grid');
+  sg.innerHTML = '';
+  SUPPLIERS.forEach(s => {
+    const dis = ev && ev.effect==='disable_C' && s.id==='C';
+    const sel = state.selSup === s.id;
+    const el = document.createElement('div');
+    el.className = 'supplier-card'+(dis?' disrupted':'')+(sel?' selected':'');
+    el.innerHTML = `<span class="risk-badge risk-${s.risk}">${s.riskLabel}</span>
+      <div class="supplier-name">${s.name}</div>
+      <div class="supplier-stats">Unit cost: $${s.cost}/unit<br>Reliability: ${Math.round(s.reliability*100)}%<br>Lead time: ${s.leadDays}d<br><em style="font-size:0.7rem;color:#888780">${s.note}</em></div>`;
+    if (!dis) el.onclick = () => { state.selSup = s.id; renderSoloRound(); };
+    sg.appendChild(el);
+  });
+
+  document.getElementById('inv-slider').value = state.selInv;
+  updateInv();
+
+  // Carriers
+  const cg = document.getElementById('shipping-grid');
+  cg.innerHTML = '';
+  CARRIERS.forEach(c => {
+    const sel = state.selCarrier === c.id;
+    const el = document.createElement('div');
+    el.className = 'ship-card'+(sel?' selected':'');
+    el.innerHTML = `<div class="ship-name">${c.name}</div>
+      <div class="ship-stats">$${c.cost}/order · ${c.days}d delivery<br><em style="font-size:0.7rem;color:#888780">${c.note}</em></div>`;
+    el.onclick = () => { state.selCarrier = c.id; renderSoloRound(); };
+    cg.appendChild(el);
+  });
+}
+
+function updateInv() {
+  const v = parseInt(document.getElementById('inv-slider').value);
+  state.selInv = v;
+  document.getElementById('inv-val').textContent = v+' units';
+  const hc = Math.round(v*5);
+  const risk = v<100?'high':v<180?'medium':'low';
+  document.getElementById('inv-cost-hint').textContent = 'Warehouse holding cost: $'+hc.toLocaleString()+'/round · Stockout risk: '+risk;
+}
+
+function confirmDecisions() {
+  if (!state.selSup || !state.selCarrier) { alert('Please select a supplier and a delivery carrier before confirming.'); return; }
+  runSoloRound();
+}
+
+function runSoloRound() {
+  const r = state.round;
+  const ev = EVENTS[r];
+  const sup = SUPPLIERS.find(s => s.id === state.selSup);
+  const car = CARRIERS.find(c => c.id === state.selCarrier);
+
+  let demand = Math.round(80 + Math.random()*120);
+  if (ev && ev.effect==='demand_surge') demand = Math.round(demand*1.6);
+
+  const supOk = Math.random() < sup.reliability;
+  const available = supOk ? state.selInv : Math.round(state.selInv*0.35);
+  const filled = Math.min(available, demand);
+  const fillRate = filled/demand;
+
+  let days = car.days + sup.leadDays;
+  if (ev && ev.effect==='economy_delay' && car.id==='econ') days += 4;
+
+  const holdMult = (ev && ev.effect==='cheap_warehouse') ? 0.8 : 1.0;
+  const holdCost = Math.round(state.selInv * 5 * holdMult);
+  const supCost  = filled * sup.cost;
+  const shipCost = Math.ceil(filled/20) * car.cost;
+  const stockout = Math.max(0, demand - available) * 10;
+  const roundCost = holdCost + supCost + shipCost + stockout;
+  const rScore = calcScore(fillRate, days, roundCost);
+
+  state.totalCost    += roundCost;
+  state.totalFilled  += filled;
+  state.totalDemand  += demand;
+  state.totalDays    += days;
+  state.totalOrders  += 1;
+  state.log.push({ round:r+1, sup:sup.name, inv:state.selInv, carrier:car.name, demand, filled, cost:roundCost, score:rScore, supOk, stockout, holdMult });
+
+  updateSoloBoard();
+
+  document.getElementById('decision-phase').classList.add('hidden');
+  document.getElementById('result-phase').classList.remove('hidden');
+
+  document.getElementById('round-result-banner').innerHTML = !supOk
+    ? `<div class="event-banner ev-bad">⚠ Supplier failure! ${sup.name} could only deliver 35% of your order this round.</div>` : '';
+
+  document.getElementById('demand-reveal').innerHTML = `
+    <div class="demand-row"><span>Fan demand this round</span><span><strong>${demand} units</strong></span></div>
+    <div class="demand-row"><span>Your stock available</span><span>${state.selInv} units${supOk?'':' <em style="color:#A32D2D">(supplier failure — only 35% delivered)</em>'}</span></div>
+    <div class="demand-row"><span>Orders filled</span><span>${filled}/${demand} &nbsp;(${Math.round(fillRate*100)}%)</span></div>
+    <div class="demand-row"><span>Delivery time</span><span>${days} days</span></div>
+    <div class="demand-row"><span>Warehouse holding cost</span><span>$${holdCost.toLocaleString()}${holdMult<1?' <em style="color:#0F6E56">(−20% vacancy discount)</em>':''}</span></div>
+    <div class="demand-row"><span>Procurement cost</span><span>$${supCost.toLocaleString()}</span></div>
+    <div class="demand-row"><span>Carrier cost</span><span>$${shipCost.toLocaleString()}</span></div>
+    ${stockout>0?`<div class="demand-row"><span>Stockout penalty</span><span style="color:#A32D2D">$${stockout.toLocaleString()}</span></div>`:''}
+    <div class="demand-row"><span>Round total cost</span><span>$${roundCost.toLocaleString()}</span></div>
+    <div class="demand-row"><span>Round score</span><span style="color:#534AB7;font-weight:800">+${rScore} pts</span></div>`;
+
+  document.getElementById('next-btn').textContent = r<5 ? 'Next Round →' : 'See Final Results →';
+}
+
+function calcScore(fillRate, days, cost) {
+  return Math.round(fillRate*500 + Math.max(0, 200 - days*12) + Math.max(0, 300 - cost/12));
+}
+
+function updateSoloBoard() {
+  const af = state.totalDemand>0 ? state.totalFilled/state.totalDemand : 0;
+  const ad = state.totalOrders>0 ? state.totalDays/state.totalOrders : 0;
+  const ts = state.log.reduce((a,l)=>a+l.score, 0);
+  document.getElementById('sc-cost').textContent = '$'+state.totalCost.toLocaleString();
+  const fc = document.getElementById('sc-fill');
+  fc.textContent = Math.round(af*100)+'%';
+  fc.className = 'score-value '+(af>=0.85?'good':af>=0.6?'warn':'bad');
+  const sc = document.getElementById('sc-speed');
+  sc.textContent = ad.toFixed(1)+'d';
+  sc.className = 'score-value '+(ad<=5?'good':ad<=9?'warn':'bad');
+  document.getElementById('sc-score').textContent = ts;
+}
+
+function nextRound() {
+  state.round++;
+  state.selSup = null; state.selCarrier = null; state.selInv = 150;
+  if (state.round >= 6) showFinal();
+  else { document.getElementById('inv-slider').value = 150; renderSoloRound(); }
+}
+
+function showFinal() {
+  document.getElementById('decision-phase').classList.add('hidden');
+  document.getElementById('result-phase').classList.add('hidden');
+  document.getElementById('final-phase').classList.remove('hidden');
+  document.getElementById('solo-progress').style.width = '100%';
+
+  const af = state.totalFilled/state.totalDemand;
+  const ad = state.totalDays/state.totalOrders;
+  const ts = state.log.reduce((a,l)=>a+l.score, 0);
+
+  document.getElementById('final-cost').textContent  = '$'+state.totalCost.toLocaleString();
+  document.getElementById('final-fill').textContent  = Math.round(af*100)+'%';
+  document.getElementById('final-speed').textContent = ad.toFixed(1)+' days';
+  document.getElementById('final-score').textContent = ts;
+
+  const grade =
+    ts>=4200 ? '🏆 Championship-level logistics. World-class supply chain manager!' :
+    ts>=2800 ? '✅ Solid season. A few disruptions hurt — review your Hormuz exposure.' :
+    ts>=1600 ? '⚠ Tough season. Cost overruns or stockouts dragged your score.' :
+               '📉 Needs work. Revisit how you balance supplier risk vs. cost savings.';
+  document.getElementById('final-grade').textContent = grade;
+
+  document.getElementById('debrief-body').innerHTML = state.log.map(l => `
+    <tr>
+      <td>${l.round}</td>
+      <td style="font-size:0.74rem">${l.sup.split(' ')[0]}</td>
+      <td>${l.inv}</td>
+      <td style="font-size:0.74rem">${l.carrier.replace('Priority ','').replace('Economy ','Econ ')}</td>
+      <td>${l.demand}</td>
+      <td>${l.filled}</td>
+      <td>$${l.cost.toLocaleString()}</td>
+      <td style="color:#534AB7;font-weight:700">${l.score}</td>
+    </tr>`).join('');
+}
+
+// ════════════════════════════════════════════
+// HEAD TO HEAD
+// ════════════════════════════════════════════
+function renderH2HRound() {
+  const r = state.round;
+  document.getElementById('h2h-round-badge').textContent = 'Round '+(r+1)+'/6';
+  document.getElementById('h2h-progress').style.width = (r/6*100)+'%';
+  document.getElementById('h2h-decision-phase').classList.remove('hidden');
+  document.getElementById('h2h-result-phase').classList.add('hidden');
+  document.getElementById('h2h-final-phase').classList.add('hidden');
+
+  const ev = EVENTS[r];
+  document.getElementById('h2h-event-container').innerHTML = ev
+    ? `<div class="event-banner ${ev.cls}">${ev.msg}<div class="ev-source">Source: ${ev.source}</div></div>` : '';
+
+  state.p1.selSup=null; state.p1.selCarrier=null; state.p1.selInv=150;
+  state.p2.selSup=null; state.p2.selCarrier=null; state.p2.selInv=150;
+  ['h2h-inv1','h2h-inv2'].forEach(id => document.getElementById(id).value=150);
+  document.getElementById('h2h-inv1-val').textContent='150 units';
+  document.getElementById('h2h-inv2-val').textContent='150 units';
+
+  renderH2HSups(ev);
+  renderH2HCarriers();
+}
+
+function renderH2HSups(ev) {
+  [1,2].forEach(p => {
+    const ps = p===1?state.p1:state.p2;
+    const color = p===1?'#534AB7':'#0F6E56';
+    const bg    = p===1?'#EEEDFE':'#E1F5EE';
+    const cont  = document.getElementById('h2h-p'+p+'-sup');
+    cont.innerHTML = '';
+    SUPPLIERS.forEach(s => {
+      const dis = ev && ev.effect==='disable_C' && s.id==='C';
+      const sel = ps.selSup === s.id;
+      const el  = document.createElement('div');
+      el.style.cssText = `border:1.5px solid ${sel?color:'#d3d1c7'};border-radius:8px;padding:5px 8px;cursor:pointer;background:${sel?bg:'white'};opacity:${dis?0.4:1};font-size:0.75rem;margin-bottom:5px;`;
+      el.innerHTML = `<strong>${s.name}</strong><br>$${s.cost}/u · ${Math.round(s.reliability*100)}% rel · ${s.leadDays}d lead`;
+      if (!dis) el.onclick = () => { ps.selSup=s.id; renderH2HSups(EVENTS[state.round]); };
+      cont.appendChild(el);
+    });
+  });
+}
+
+function renderH2HCarriers() {
+  [1,2].forEach(p => {
+    const ps = p===1?state.p1:state.p2;
+    const color = p===1?'#534AB7':'#0F6E56';
+    const bg    = p===1?'#EEEDFE':'#E1F5EE';
+    const cont  = document.getElementById('h2h-p'+p+'-ship');
+    cont.innerHTML = '';
+    CARRIERS.forEach(c => {
+      const sel = ps.selCarrier === c.id;
+      const el  = document.createElement('div');
+      el.style.cssText = `border:1.5px solid ${sel?color:'#d3d1c7'};border-radius:8px;padding:5px 8px;cursor:pointer;background:${sel?bg:'white'};font-size:0.75rem;margin-bottom:5px;`;
+      el.innerHTML = `<strong>${c.name}</strong><br>$${c.cost}/order · ${c.days}d delivery`;
+      el.onclick = () => { ps.selCarrier=c.id; renderH2HCarriers(); };
+      cont.appendChild(el);
+    });
+  });
+}
+
+function updateH2HInv(p) {
+  const v = parseInt(document.getElementById('h2h-inv'+p).value);
+  if (p===1) state.p1.selInv=v; else state.p2.selInv=v;
+  document.getElementById('h2h-inv'+p+'-val').textContent = v+' units';
+}
+
+function confirmH2H() {
+  if (!state.p1.selSup||!state.p1.selCarrier) { alert('Player 1: please select a supplier and carrier.'); return; }
+  if (!state.p2.selSup||!state.p2.selCarrier) { alert('Player 2: please select a supplier and carrier.'); return; }
+  runH2HRound();
+}
+
+function runH2HRound() {
+  const r  = state.round;
+  const ev = EVENTS[r];
+  let demand = Math.round(80 + Math.random()*120);
+  if (ev && ev.effect==='demand_surge') demand = Math.round(demand*1.6);
+
+  [state.p1, state.p2].forEach(ps => {
+    const sup = SUPPLIERS.find(s=>s.id===ps.selSup);
+    const car = CARRIERS.find(c=>c.id===ps.selCarrier);
+    const supOk    = Math.random() < sup.reliability;
+    const available= supOk ? ps.selInv : Math.round(ps.selInv*0.35);
+    const filled   = Math.min(available, demand);
+    const fillRate = filled/demand;
+    let days = car.days + sup.leadDays;
+    if (ev && ev.effect==='economy_delay' && car.id==='econ') days += 4;
+    const holdMult = (ev && ev.effect==='cheap_warehouse') ? 0.8 : 1.0;
+    const holdCost = Math.round(ps.selInv * 5 * holdMult);
+    const supCost  = filled * sup.cost;
+    const shipCost = Math.ceil(filled/20) * car.cost;
+    const stockout = Math.max(0, demand-available)*10;
+    const roundCost= holdCost+supCost+shipCost+stockout;
+    const rScore   = calcScore(fillRate, days, roundCost);
+
+    ps.totalCost   += roundCost;
+    ps.totalFilled += filled;
+    ps.totalDemand += demand;
+    ps.totalDays   += days;
+    ps.totalOrders += 1;
+    ps.score       += rScore;
+    ps._last = { sup:sup.name, demand, filled, days, roundCost, rScore, supOk, stockout, holdMult };
+  });
+
+  document.getElementById('h2h-p1-score').textContent = state.p1.score;
+  document.getElementById('h2h-p2-score').textContent = state.p2.score;
+  document.getElementById('h2h-decision-phase').classList.add('hidden');
+  document.getElementById('h2h-result-phase').classList.remove('hidden');
+
+  [1,2].forEach(p => {
+    const ps    = p===1?state.p1:state.p2;
+    const lr    = ps._last;
+    const color = p===1?'#534AB7':'#0F6E56';
+    document.getElementById('h2h-p'+p+'-result').innerHTML = `
+      <div class="panel-title" style="color:${color}">Player ${p} Results</div>
+      <div class="demand-reveal">
+        <div class="demand-row"><span>Demand</span><span>${lr.demand} units</span></div>
+        <div class="demand-row"><span>Filled</span><span>${lr.filled} (${Math.round(lr.filled/lr.demand*100)}%)</span></div>
+        <div class="demand-row"><span>Delivery</span><span>${lr.days} days</span></div>
+        <div class="demand-row"><span>Round cost</span><span>$${lr.roundCost.toLocaleString()}</span></div>
+        ${lr.stockout>0?`<div class="demand-row"><span>Stockout penalty</span><span style="color:#A32D2D">$${lr.stockout.toLocaleString()}</span></div>`:''}
+        ${!lr.supOk?`<div class="demand-row" style="color:#A32D2D"><span>Supplier failure</span><span>Only 35% delivered</span></div>`:''}
+        ${lr.holdMult<1?`<div class="demand-row" style="color:#0F6E56"><span>Warehouse discount</span><span>−20%</span></div>`:''}
+        <div class="demand-row"><span>Round score</span><span style="color:${color};font-weight:800">+${lr.rScore} pts</span></div>
+      </div>`;
+  });
+
+  document.getElementById('h2h-next-btn').textContent = state.round<5 ? 'Next Round →' : 'See Final Results →';
+}
+
+function nextH2HRound() {
+  state.round++;
+  if (state.round >= 6) showH2HFinal();
+  else renderH2HRound();
+}
+
+function showH2HFinal() {
+  document.getElementById('h2h-result-phase').classList.add('hidden');
+  document.getElementById('h2h-final-phase').classList.remove('hidden');
+  document.getElementById('h2h-progress').style.width = '100%';
+
+  [1,2].forEach(p => {
+    const ps    = p===1?state.p1:state.p2;
+    const af    = Math.round(ps.totalFilled/ps.totalDemand*100);
+    const ad    = (ps.totalDays/ps.totalOrders).toFixed(1);
+    const color = p===1?'#534AB7':'#0F6E56';
+    document.getElementById('h2h-final-p'+p).innerHTML = `
+      <div class="result-label" style="color:${color}">Player ${p}</div>
+      <div class="result-num" style="color:${color}">${ps.score}</div>
+      <div class="result-sub">Fill rate: ${af}%</div>
+      <div class="result-sub">Avg delivery: ${ad} days</div>
+      <div class="result-sub">Total cost: $${ps.totalCost.toLocaleString()}</div>`;
+  });
+
+  const winner = state.p1.score>state.p2.score ? 'Player 1'
+               : state.p2.score>state.p1.score ? 'Player 2' : null;
+  document.getElementById('h2h-winner').textContent = winner ? '🏆 '+winner+' wins!' : "🤝 It's a tie!";
+}
+</script>
+</body>
+</html>
